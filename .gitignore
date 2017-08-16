@@ -1,0 +1,11 @@
+.cproject
+.project
+.settings/*
+CMSIS/*
+Debug/*
+LinkerScript.ld
+NUCLEO-L432KC.xml
+startup/*
+inc/stm32l4xx_it.h
+src/syscalls.c
+src/system_stm32l4xx.c
