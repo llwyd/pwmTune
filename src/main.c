@@ -13,7 +13,7 @@ volatile char i;
 //c major scale frequencies
 int freq[8]={262,294,330,349,392,440,494,523};
 //note lengths
-char value[8]={1,1,1,1,1,1,1,1};
+char value[8]={2,2,2,2,2,2,2,1};
 
 
 void pinSetup(void){
@@ -30,13 +30,18 @@ void toggleB(char pin){
 void updateFreq(int freq){
 	TIM1->ARR=1000000/(freq);
 }
+void updateValue(char val){
+	TIM2->ARR=1000000/(tempo/(60/val));
+}
 void TIM2_IRQHandler(void){
 	//acknowledge interrupt
 	TIM2->SR&=~(TIM_SR_UIF);
 	//used to debug interrupt speed
 	toggleB(3);
 	//update pwm frequency
-	updateFreq(freq[i++]);
+	updateFreq(freq[i]);
+	//update note length
+	updateValue(value[i++]);
 	//move to next note
 	i=i%length;
 }
