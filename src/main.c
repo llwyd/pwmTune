@@ -6,6 +6,16 @@
  * 	Plays a basic tune using the PWM functions
  *
  */
+
+volatile char length=8;
+volatile int tempo=120;
+volatile char i;
+//c major scale frequencies
+int freq[8]={262,294,330,349,392,440,494,523};
+//note lengths
+char value[8]={1,1,1,1,1,1,1,1};
+
+
 void pinSetup(void){
 	//GPIO Clock
 	RCC->AHB2ENR|=(1<<1);
@@ -17,8 +27,18 @@ void pinSetup(void){
 void toggleB(char pin){
 	GPIOB->ODR ^= (1<<pin);
 }
-void TIM1_IRQHandler(void){
-	TIM1->SR&=~(TIM_SR_UIF);
+void updateFreq(int freq){
+	TIM1->ARR=1000000/(freq);
+}
+void TIM2_IRQHandler(void){
+	//acknowledge interrupt
+	TIM2->SR&=~(TIM_SR_UIF);
+	//used to debug interrupt speed
+	toggleB(3);
+	//update pwm frequency
+	updateFreq(freq[i++]);
+	//move to next note
+	i=i%length;
 }
 
 void pwmSetup(){
@@ -35,7 +55,7 @@ void pwmSetup(){
 
 	//Timer configuration
 	//Set period
-	TIM1->ARR=250;
+	TIM1->ARR=1000000/1000;
 	//set prescalar
 	TIM1->PSC=SystemCoreClock/1000000 -1;
 	//Enable PWM
@@ -52,15 +72,41 @@ void pwmSetup(){
 	TIM1->CCER&=~(TIM_CCER_CC1P);
 	//output enable
 	TIM1->CCER|=TIM_CCER_CC1E;
-	//TIM1->DIER|= TIM_DIER_UIE;
 	//main output enable
 	TIM1->BDTR |= TIM_BDTR_MOE;
 	//start
-	TIM1->CR1|=(TIM_CR1_CEN);
+	//TIM1->CR1|=(TIM_CR1_CEN);
 }
 
+void timerSetup(){
+	//enable timer 2 clock
+	RCC->APB1ENR1|=RCC_APB1ENR1_TIM2EN;
+	//Set interrupt priority
+	NVIC_SetPriority(TIM2_IRQn,0);
+	//Enable interrupt
+	NVIC_EnableIRQ(TIM2_IRQn);
+	//Frequency
+	TIM2->ARR=1000000/(tempo/60);
+	//prescalar
+	TIM2->PSC=SystemCoreClock/1000000 -1;
+	//enable interrupts
+	TIM2->DIER|=TIM_DIER_UIE;
+}
+void start(){
+	//start pwm
+	TIM1->CR1|=(TIM_CR1_CEN);
+	//start timer
+	TIM2->CR1|=TIM_CR1_CEN;
+}
 int main(void){
+	i=0;
+	//pin setup
 	pinSetup();
+	//pwm setup
 	pwmSetup();
+	//timer setup
+	timerSetup();
+	//start playback
+	start();
 	while(1);
 }
