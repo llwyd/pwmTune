@@ -1,4 +1,5 @@
 #include "stm32l4xx.h"
+#include "notes.h"
 /*
  *
  * 	pwmTune
@@ -8,10 +9,10 @@
  */
 
 volatile char length=8;
-volatile int tempo=120;
+volatile int tempo=80;
 volatile char i;
 //c major scale frequencies
-int freq[8]={262,294,330,349,392,440,494,523};
+int freq[8]={c5,d5,e5,f5,g5,a5,b5,c6};
 //note lengths
 char value[8]={2,2,2,2,2,2,2,1};
 
